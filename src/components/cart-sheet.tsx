@@ -29,7 +29,7 @@ export function CartSheet() {
         await update(prodRef, { stock: newStock });
       }
     }
-    alert(`Order placed! Total: $${total.toFixed(2)}\n\nThank you for your purchase!`);
+    alert(`Order placed! Total: ₹${total.toFixed(2)}\n\nThank you for your purchase!`);
     clearCart();
   };
 
@@ -78,7 +78,7 @@ export function CartSheet() {
                     <h4 className="font-semibold line-clamp-1" data-testid={`text-cart-item-${item.id}`}>
                       {item.name}
                     </h4>
-                    <p className="text-sm text-muted-foreground">${item.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">₹{item.price.toFixed(2)}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <Button
                         variant="outline"
@@ -131,7 +131,7 @@ export function CartSheet() {
           <div className="border-t pt-4 space-y-4">
             <div className="flex justify-between text-lg font-semibold">
               <span>Total:</span>
-              <span data-testid="text-cart-total">${total.toFixed(2)}</span>
+              <span data-testid="text-cart-total">₹{total.toFixed(2)}</span>
             </div>
             <Button className="w-full" size="lg" onClick={handleCheckout} data-testid="button-checkout">
               Checkout

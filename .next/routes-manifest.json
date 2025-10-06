@@ -55,6 +55,18 @@
       "regex": "^/register(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/register(?:/)?$"
+    },
+    {
+      "page": "/register/customer",
+      "regex": "^/register/customer(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register/customer(?:/)?$"
+    },
+    {
+      "page": "/register/shopkeeper",
+      "regex": "^/register/shopkeeper(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/register/shopkeeper(?:/)?$"
     }
   ],
   "dataRoutes": [],

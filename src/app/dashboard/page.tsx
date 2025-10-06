@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
-import { Package, AlertTriangle, DollarSign, Plus, Pencil, Trash2 } from "lucide-react";
+import { Package, AlertTriangle, IndianRupee, Plus, Pencil, Trash2 } from "lucide-react";
 
 
 
@@ -218,8 +218,8 @@ export default function Dashboard() {
           />
           <StatsCard
             title="Inventory Value"
-            value={`$${totalValue.toFixed(2)}`}
-            icon={DollarSign}
+            value={`₹${totalValue.toFixed(2)}`}
+            icon={IndianRupee}
             description="Total stock value"
           />
         </div>

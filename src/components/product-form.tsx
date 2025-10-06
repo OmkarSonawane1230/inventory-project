@@ -94,7 +94,7 @@ export function ProductForm({ onSubmit, initialData, isLoading = false }: Produc
             name="price"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Price ($)</FormLabel>
+                <FormLabel>Price (₹)</FormLabel>
                 <FormControl>
                   <Input type="number" step="0.01" placeholder="99.99" {...field} data-testid="input-product-price" />
                 </FormControl>

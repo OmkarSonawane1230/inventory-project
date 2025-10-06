@@ -70,7 +70,7 @@ export function ProductCard({ id, name, description, price, imageUrl, stock, cat
         </p>
         <div className="flex items-baseline gap-2">
           <span className="text-2xl font-bold text-primary" data-testid="text-product-price">
-            ${price.toFixed(2)}
+            ₹{price.toFixed(2)}
           </span>
           {stock > 0 && (
             <span className="text-xs text-muted-foreground" data-testid="text-stock-quantity">

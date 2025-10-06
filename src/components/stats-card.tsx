@@ -1,10 +1,10 @@
 import { Card, CardContent } from "../components/ui/card";
-import { LucideIcon } from "lucide-react";
+import { IndianRupee } from "lucide-react";
 
 interface StatsCardProps {
   title: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: typeof IndianRupee;
   description?: string;
   trend?: {
     value: number;
