@@ -1,6 +1,9 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { ref, get, set } from 'firebase/database';
+import { database } from '../lib/firebase';
+import { useAuth } from './auth-context';
 
 interface CartItem {
   id: string;
@@ -25,6 +28,31 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const { user } = useAuth();
+
+  // Load cart from database on login
+  useEffect(() => {
+    async function loadCart() {
+      if (user && user.role === 'customer') {
+        const snap = await get(ref(database, `customers/${user.id}/cart`));
+        if (snap.exists()) {
+          setItems(snap.val() || []);
+        } else {
+          setItems([]);
+        }
+      }
+    }
+    loadCart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Save cart to database on change
+  useEffect(() => {
+    if (user && user.role === 'customer') {
+      set(ref(database, `customers/${user.id}/cart`), items);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, user?.id]);
 
   const addToCart = (product: { id: string; name: string; price: number; imageUrl: string; stock: number }) => {
     let success = false;
@@ -78,6 +106,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+
+  
 
   return (
     <CartContext.Provider value={{ 

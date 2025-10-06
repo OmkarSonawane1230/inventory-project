@@ -1,5 +1,5 @@
 import { ShoppingCart, Trash2, Plus, Minus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "./ui/button";
 import {
   Sheet,
   SheetContent,
@@ -7,16 +7,28 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { useCart } from "@/contexts/cart-context";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+} from "./ui/sheet";
+import { useCart } from "../contexts/cart-context";
+import { Badge } from "./ui/badge";
+import { useToast } from "../hooks/use-toast";
+import { ref, get, update } from "firebase/database";
+import { database } from "../lib/firebase";
 
 export function CartSheet() {
   const { items, removeFromCart, updateQuantity, total, itemCount, clearCart } = useCart();
   const { toast } = useToast();
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
+    // Decrement stock in Firebase for each item
+    for (const item of items) {
+      const prodRef = ref(database, `products/${item.id}`);
+      const snap = await get(prodRef);
+      if (snap.exists()) {
+        const prod = snap.val();
+        const newStock = Math.max(0, (prod.stock || 0) - item.quantity);
+        await update(prodRef, { stock: newStock });
+      }
+    }
     alert(`Order placed! Total: $${total.toFixed(2)}\n\nThank you for your purchase!`);
     clearCart();
   };

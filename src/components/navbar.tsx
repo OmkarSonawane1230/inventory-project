@@ -4,9 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./theme-toggle";
 import { CartSheet } from "./cart-sheet";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import { Package, ShoppingBag, LayoutDashboard, UserPlus, LogIn, LogOut } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "../contexts/auth-context";
 
 export function Navbar() {
   const pathname = usePathname();

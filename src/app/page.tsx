@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "../components/ui/button";
 import { Package, ShoppingBag, BarChart3, Shield, Zap } from "lucide-react";
 
 export default function Home() {

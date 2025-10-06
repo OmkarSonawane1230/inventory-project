@@ -1,75 +1,50 @@
 "use client";
 
-import { useState } from "react";
-import { ProductCard } from "@/components/product-card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
+import { get, ref } from "firebase/database";
+import { database } from "../../lib/firebase";
+import { ProductCard } from "../../components/product-card";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
 import { Search } from "lucide-react";
 
-const MOCK_PRODUCTS = [
-  {
-    id: "1",
-    name: "Wireless Headphones",
-    description: "Premium noise-cancelling wireless headphones with 30-hour battery life",
-    price: 199.99,
-    imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop",
-    stock: 12,
-    category: "Electronics"
-  },
-  {
-    id: "2",
-    name: "Smart Watch",
-    description: "Fitness tracking smartwatch with heart rate monitor and GPS",
-    price: 299.99,
-    imageUrl: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=300&fit=crop",
-    stock: 8,
-    category: "Electronics"
-  },
-  {
-    id: "3",
-    name: "Running Shoes",
-    description: "Lightweight running shoes with advanced cushioning technology",
-    price: 129.99,
-    imageUrl: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop",
-    stock: 0,
-    category: "Sports"
-  },
-  {
-    id: "4",
-    name: "Coffee Maker",
-    description: "Programmable coffee maker with thermal carafe",
-    price: 89.99,
-    imageUrl: "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=400&h=300&fit=crop",
-    stock: 15,
-    category: "Home"
-  },
-  {
-    id: "5",
-    name: "Yoga Mat",
-    description: "Non-slip yoga mat with carrying strap",
-    price: 39.99,
-    imageUrl: "https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?w=400&h=300&fit=crop",
-    stock: 3,
-    category: "Sports"
-  },
-  {
-    id: "6",
-    name: "Backpack",
-    description: "Durable laptop backpack with multiple compartments",
-    price: 79.99,
-    imageUrl: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop",
-    stock: 20,
-    category: "Other"
-  }
-];
+
+type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  imageUrl: string;
+  stock: number;
+  category: string;
+};
 
 const CATEGORIES = ["All", "Electronics", "Clothing", "Food", "Home", "Sports", "Books", "Other"];
 
 export default function Customer() {
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredProducts = MOCK_PRODUCTS.filter(product => {
+  useEffect(() => {
+    async function fetchProducts() {
+      setLoading(true);
+      const snap = await get(ref(database, "products"));
+      if (snap.exists()) {
+        const data = snap.val();
+        const loaded: Product[] = Object.entries(data).map(([id, prod]: any) => ({ id, ...prod }));
+        setProducts(loaded);
+      } else {
+        setProducts([]);
+      }
+      setLoading(false);
+    }
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          product.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
@@ -122,7 +97,11 @@ export default function Customer() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        {filteredProducts.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <p className="text-muted-foreground text-lg">Loading products...</p>
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} {...product} />

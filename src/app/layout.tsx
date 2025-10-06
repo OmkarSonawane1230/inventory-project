@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { Providers } from "./providers";
-import { Navbar } from "@/components/navbar";
+import { Navbar } from "../components/navbar";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: "InventoryPro - Modern Inventory Management",

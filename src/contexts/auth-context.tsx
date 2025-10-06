@@ -8,8 +8,9 @@ import {
   onAuthStateChanged,
   type User as FirebaseUser
 } from 'firebase/auth';
-import { ref, set } from 'firebase/database';
-import { auth, database, hasFirebaseConfig } from '@/lib/firebase';
+import { ref, set, get } from 'firebase/database';
+import { database, hasFirebaseConfig } from '../lib/firebase';
+
 
 interface User {
   id: string;
@@ -24,44 +25,13 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string, shopName: string, location: string) => Promise<void>;
+  register: (email: string, password: string, name: string, role: 'shopkeeper' | 'customer', shopName?: string, location?: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const DUMMY_USERS: User[] = [
-  {
-    id: 'shopkeeper-1',
-    email: 'alice@shop.com',
-    name: 'Alice Johnson',
-    role: 'shopkeeper',
-    shopName: 'Alice Electronics',
-    location: 'New York, NY'
-  },
-  {
-    id: 'shopkeeper-2',
-    email: 'bob@shop.com',
-    name: 'Bob Smith',
-    role: 'shopkeeper',
-    shopName: 'Bob Sports Store',
-    location: 'Los Angeles, CA'
-  },
-  {
-    id: 'customer-1',
-    email: 'carol@customer.com',
-    name: 'Carol Williams',
-    role: 'customer'
-  },
-  {
-    id: 'customer-2',
-    email: 'david@customer.com',
-    name: 'David Brown',
-    role: 'customer'
-  }
-];
 
-const DUMMY_PASSWORD = 'demo123';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -78,105 +48,130 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    if (hasFirebaseConfig && auth) {
-      // Listen to Firebase auth state
-      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-          const userData: User = {
-            id: firebaseUser.uid,
-            email: firebaseUser.email || '',
-            name: firebaseUser.displayName || 'User',
-            role: 'shopkeeper',
-          };
-          setUser(userData);
-          localStorage.setItem('auth_user', JSON.stringify(userData));
-        } else {
-          setUser(null);
-          localStorage.removeItem('auth_user');
+    // Seed a few shopkeepers if not present
+    async function seedShopkeepers() {
+      const snap = await get(ref(database, 'shops'));
+      if (!snap.exists()) {
+        const demoShopkeepers = [
+          { name: 'Alice Johnson', shopName: 'Alice Electronics', email: 'alice@shop.com', password: 'demo123', location: 'New York, NY' },
+          { name: 'Bob Smith', shopName: 'Bob Sports Store', email: 'bob@shop.com', password: 'demo123', location: 'Los Angeles, CA' },
+        ];
+        for (const sk of demoShopkeepers) {
+          const uid = Date.now().toString() + Math.floor(Math.random() * 10000).toString();
+          await set(ref(database, `shops/${uid}`), {
+            ...sk,
+            createdAt: Date.now()
+          });
         }
-        setLoading(false);
-      });
-
-      return () => unsubscribe();
-    } else {
-      setLoading(false);
+      }
     }
+    seedShopkeepers();
+
+    setLoading(false);
   }, []);
 
   const login = async (email: string, password: string) => {
-    if (hasFirebaseConfig && auth) {
-      // Firebase login
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      const userData: User = {
-        id: result.user.uid,
-        email: result.user.email || '',
-        name: result.user.displayName || 'User',
-        role: 'shopkeeper',
-      };
-      setUser(userData);
-      localStorage.setItem('auth_user', JSON.stringify(userData));
-    } else {
-      // Dummy login for demo
-      const dummyUser = DUMMY_USERS.find(u => u.email === email);
-      if (dummyUser && password === DUMMY_PASSWORD) {
-        setUser(dummyUser);
-        localStorage.setItem('auth_user', JSON.stringify(dummyUser));
+    if (hasFirebaseConfig && database) {
+      // Find user by email and password in shops
+      let userData: User | null = null;
+      const shopsSnap = await get(ref(database, 'shops'));
+      if (shopsSnap.exists()) {
+        const shops = shopsSnap.val();
+        for (const [uid, shop] of Object.entries(shops)) {
+          const s = shop as any;
+          if (s.email === email && s.password === password) {
+            userData = {
+              id: uid,
+              email: s.email,
+              name: s.name,
+              role: 'shopkeeper',
+              shopName: s.shopName,
+              location: s.location
+            };
+            break;
+          }
+        }
+      }
+      // If not found in shops, check customers
+      if (!userData) {
+        const custSnap = await get(ref(database, 'customers'));
+        if (custSnap.exists()) {
+          const customers = custSnap.val();
+          for (const [uid, cust] of Object.entries(customers)) {
+            const c = cust as any;
+            if (c.email === email && c.password === password) {
+              userData = {
+                id: uid,
+                email: c.email,
+                name: c.name,
+                role: 'customer'
+              };
+              break;
+            }
+          }
+        }
+      }
+      if (userData) {
+        setUser(userData);
+        localStorage.setItem('auth_user', JSON.stringify(userData));
       } else {
-        throw new Error('Invalid credentials. Try alice@shop.com, bob@shop.com, carol@customer.com, or david@customer.com with password: demo123');
+        setUser(null);
+        localStorage.removeItem('auth_user');
+        throw new Error('Invalid credentials.');
       }
     }
   };
 
   const register = async (
-    email: string, 
-    password: string, 
-    name: string, 
-    shopName: string, 
-    location: string
+    email: string,
+    password: string,
+    name: string,
+    role: 'shopkeeper' | 'customer',
+    shopName?: string,
+    location?: string
   ) => {
-    if (hasFirebaseConfig && auth && database) {
-      // Firebase registration
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      const shopId = result.user.uid;
-      
-      // Store shopkeeper data
-      await set(ref(database, `shops/${shopId}`), {
-        name,
-        shopName,
-        email,
-        location,
-        createdAt: Date.now()
-      });
-
-      const userData: User = {
-        id: shopId,
-        email,
-        name,
-        role: 'shopkeeper',
-        shopName,
-        location
-      };
-      setUser(userData);
-      localStorage.setItem('auth_user', JSON.stringify(userData));
-    } else {
-      // Dummy registration for demo - just log them in as demo user
-      const userData: User = {
-        id: 'demo-' + Date.now(),
-        email,
-        name,
-        role: 'shopkeeper',
-        shopName,
-        location
-      };
+    if (hasFirebaseConfig && database) {
+      // Generate a unique id (timestamp-based)
+      const uid = Date.now().toString();
+      let userData: User;
+      if (role === 'shopkeeper') {
+        await set(ref(database, `shops/${uid}`), {
+          name,
+          shopName,
+          email,
+          password,
+          location,
+          createdAt: Date.now()
+        });
+        userData = {
+          id: uid,
+          email,
+          name,
+          role,
+          shopName,
+          location
+        };
+      } else {
+        await set(ref(database, `customers/${uid}`), {
+          name,
+          email,
+          password,
+          createdAt: Date.now(),
+          cart: []
+        });
+        userData = {
+          id: uid,
+          email,
+          name,
+          role
+        };
+      }
       setUser(userData);
       localStorage.setItem('auth_user', JSON.stringify(userData));
     }
   };
 
   const logout = async () => {
-    if (hasFirebaseConfig && auth) {
-      await firebaseSignOut(auth);
-    }
     setUser(null);
     localStorage.removeItem('auth_user');
   };

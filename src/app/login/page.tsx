@@ -6,8 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
 import {
   Form,
   FormControl,
@@ -15,12 +15,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from "../../components/ui/form";
+import { Input } from "../../components/ui/input";
+import { Alert, AlertDescription } from "../../components/ui/alert";
 import { LogIn, AlertCircle } from "lucide-react";
-import { useAuth } from "@/contexts/auth-context";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "../../contexts/auth-context";
+import { useToast } from "../../hooks/use-toast";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
@@ -31,7 +31,7 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -51,9 +51,16 @@ export default function Login() {
       await login(data.email, data.password);
       toast({
         title: "Login successful",
-        description: "Welcome back to your dashboard!",
+        description: "Welcome back!",
       });
-      router.push("/dashboard");
+      // Redirect based on user role
+      setTimeout(() => {
+        if (user?.role === 'shopkeeper') {
+          router.push("/dashboard");
+        } else {
+          router.push("/customer");
+        }
+      }, 100);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {

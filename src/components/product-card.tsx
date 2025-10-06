@@ -1,9 +1,9 @@
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { ShoppingCart } from "lucide-react";
-import { useCart } from "@/contexts/cart-context";
-import { useToast } from "@/hooks/use-toast";
+import { useCart } from "../contexts/cart-context";
+import { useToast } from "../hooks/use-toast";
 
 interface ProductCardProps {
   id: string;
