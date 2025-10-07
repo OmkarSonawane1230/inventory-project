@@ -81,15 +81,6 @@ export default function Login() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Alert className="mb-6 bg-muted/50">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="text-sm">
-              <div className="font-semibold mb-1">Demo accounts (password: demo123):</div>
-              <div>Shopkeepers: alice@shop.com, bob@shop.com</div>
-              <div>Customers: carol@customer.com, david@customer.com</div>
-            </AlertDescription>
-          </Alert>
-
           {error && (
             <Alert variant="destructive" className="mb-6">
               <AlertCircle className="h-4 w-4" />

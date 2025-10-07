@@ -2,7 +2,7 @@ import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { getDatabase, type Database } from 'firebase/database';
 
 const firebaseConfig = {
-  databaseURL: process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL
+  databaseURL: 'https://realtime-inventory-567bc-default-rtdb.asia-southeast1.firebasedatabase.app/'
 };
 
 
